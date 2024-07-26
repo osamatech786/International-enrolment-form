@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import date
+from datetime import datetime, date
 from streamlit_drawable_canvas import st_canvas
 import json
 import pandas as pd
@@ -82,9 +82,14 @@ elif st.session_state.step == 2:
 
 elif st.session_state.step == 3:
     st.title("> 2: Date of Birth")
-    st.session_state.dob = st.date_input("Please select your date of birth.", value=st.session_state.dob or date.today(), format='DD/MM/YYYY')
+    st.session_state.dob = st.date_input("Please select your date of birth.", 
+                                        min_value=date(1900, 1, 1),  # Minimum selectable date
+                                        max_value=date(2025, 12, 31),  # Maximum selectable date
+                                        key="date_of_borth",  # Unique key for the widget
+                                        help="Choose a date",  # Tooltip text
+                                        value=st.session_state.dob or datetime(2000, 1, 1), 
+                                        format='DD/MM/YYYY')
     
-
     if st.button("Next"):
         if st.session_state.dob:
             st.session_state.step = 4
