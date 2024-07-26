@@ -10,6 +10,12 @@ with open("world-countries.json") as file:
     countries = [entry['name'] for entry in data]
 countries = ["Select"] + sorted(countries)
 
+# Load and process the Excel file
+df = pd.read_excel('courses.xlsx', sheet_name=0)
+df = df.drop_duplicates(subset=['Category', 'Course Title'])
+category_courses = df.groupby('Category')['Course Title'].apply(list).to_dict()
+category_courses = df.groupby('Category')['Course Title'].apply(lambda x: sorted(set(x))).to_dict()
+
 
 # Initialize session state variables if they do not exist
 if 'step' not in st.session_state:
@@ -26,7 +32,8 @@ if 'step' not in st.session_state:
     st.session_state.course = ""
     st.session_state.start_date = None
     st.session_state.learning_mode = ""
-    st.session_state.id_document = None
+    st.session_state.front_id_document = None
+    st.session_state.back_id_document = None
     st.session_state.address_proof = None
     st.session_state.additional_document = None
     st.session_state.learning_preferences = ""
@@ -143,29 +150,46 @@ elif st.session_state.step == 7:
 
 elif st.session_state.step == 8:
     st.title("> 7: Course Information")
-    st.session_state.course = st.selectbox("Please select the course you are interested in.", ["Select", "Course 1", "Course 2", "Course 3"])
+    
+    # Category selection
+    categories = ["Select"] + list(category_courses.keys())
+    st.session_state.category = st.selectbox("Please select the course category.", categories)
+    
+    # Dynamically update course options based on the selected category
+    if st.session_state.category != "Select":
+        courses = category_courses.get(st.session_state.category, [])
+    else:
+        courses = []
+    st.session_state.courses = st.multiselect("Please select the courses you are interested in.", courses)
+    
+    # Date and learning mode input
     st.session_state.start_date = st.date_input("Please select your preferred start date for the course.", value=st.session_state.start_date or date.today(), format='DD/MM/YYYY')
     st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Select", "Online", "In-Person", "Hybrid"])
+    
     if st.button("Next"):
-        if st.session_state.course != "Select" and st.session_state.start_date and st.session_state.learning_mode != "Select":
+        if st.session_state.courses and st.session_state.start_date and st.session_state.learning_mode != "Select":
             st.session_state.step = 9
             st.experimental_rerun()
         else:
-            st.warning("Please select your course, preferred start date, and learning mode before proceeding.")
+            st.warning("Please select your courses, preferred start date, and learning mode before proceeding.")
 
 elif st.session_state.step == 9:
     st.title("> 8: Identification Documents")
-    st.session_state.id_document = st.file_uploader("Please upload a scan or photo of your passport or ID.", type=["jpg", "png", "pdf", "docx"])
+    st.text("(*Upload of any 1 document is mandatory)")
+    # Upload front and back of the document
+    st.session_state.front_id_document = st.file_uploader("Please upload a scan or photo of the front of your passport or ID.", type=["jpg", "png", "pdf", "docx"], key="front")
+    st.session_state.back_id_document = st.file_uploader("Please upload a scan or photo of the back of your passport or ID.", type=["jpg", "png", "pdf", "docx"], key="back")
+    
     if st.button("Next"):
-        if st.session_state.id_document:
+        if st.session_state.front_id_document or st.session_state.back_id_document:
             st.session_state.step = 10
             st.experimental_rerun()
         else:
-            st.warning("Please upload your identification document before proceeding.")
+            st.warning("Please upload both the front and back of your identification document before proceeding.")
 
 elif st.session_state.step == 10:
     st.title("> 9: Proof of Address")
-    st.session_state.address_proof = st.file_uploader("Please upload a scan or photo of your proof of address.", type=["jpg", "png", "pdf", "docx"])
+    st.session_state.address_proof = st.file_uploader("*Please upload a scan or photo of your proof of address.", type=["jpg", "png", "pdf", "docx"])
     if st.button("Next"):
         if st.session_state.address_proof:
             st.session_state.step = 11
@@ -180,7 +204,7 @@ elif st.session_state.step == 11:
     st.session_state.emergency_contact = st.text_input("Please provide emergency contact details.")
     st.session_state.consent = st.checkbox("I consent to the collection and processing of my personal data according to Prevista’s privacy policy.")
     
-    st.write("[Privacy Policy](#)")  # Replace '#' with actual link to privacy policy
+    st.write("[Privacy Policy](https://www.prevista.co.uk/policies)")  # Replace '#' with actual link to privacy policy
 
     if st.button("Next"):
         if all([st.session_state.learning_preferences, st.session_state.special_requirements, st.session_state.emergency_contact, st.session_state.consent]):
