@@ -10,6 +10,8 @@ from PIL import Image
 import numpy as np
 import smtplib
 from email.message import EmailMessage
+# from dotenv import load_dotenv
+# import os
 
 
 if 'files' not in st.session_state:
@@ -50,8 +52,11 @@ def send_email_with_attachments(sender_email, sender_password, receiver_email, s
 
     # Attach uploaded files
     for uploaded_file in files:
-        uploaded_file.seek(0)  # Move to the beginning of the UploadedFile
-        msg.add_attachment(uploaded_file.read(), maintype='application', subtype='octet-stream', filename=uploaded_file.name)
+        try:
+            uploaded_file.seek(0)  # Move to the beginning of the UploadedFile
+            msg.add_attachment(uploaded_file.read(), maintype='application', subtype='octet-stream', filename=uploaded_file.name)
+        except Exception as e:
+            print(f"Error attaching file {uploaded_file.name}: {e}")
 
     # Attach local file if specified
     if local_file_path:
@@ -332,11 +337,13 @@ elif st.session_state.step == 13:
 
     # Print the list of files
     if st.session_state.files:
-        st.write("Files uploaded:")
+        st.write("Files uploaded:", len(st.session_state.files))
         for file in st.session_state.files:
             st.write(f"File name: {file.name}, File type: {file.type}")
     else:
         st.write("No files uploaded.")
+    
+    
 
     if st.button("Submit"):
         # Create a new Document
@@ -389,7 +396,6 @@ elif st.session_state.step == 13:
         # Save the document
         doc_path = f"Int_Form_Submission_{st.session_state.personal_info}.docx"
         doc.save(doc_path)
-
 
         # Email
         # Sender email credentials
