@@ -3,6 +3,11 @@ from datetime import datetime, date
 from streamlit_drawable_canvas import st_canvas
 import json
 import pandas as pd
+from docx import Document
+from docx.shared import Inches
+import io
+from PIL import Image
+import numpy as np
 
 # Load country names from a JSON file
 with open("world-countries.json") as file:
@@ -16,6 +21,18 @@ df = df.drop_duplicates(subset=['Category', 'Course Title'])
 category_courses = df.groupby('Category')['Course Title'].apply(list).to_dict()
 category_courses = df.groupby('Category')['Course Title'].apply(lambda x: sorted(set(x))).to_dict()
 
+def is_signature_drawn(signature):
+    # Check if signature is None or an empty numpy array
+    if signature is None:
+        return False
+    # Ensure it is a numpy array and has content
+    if isinstance(signature, np.ndarray) and signature.size > 0:
+        # Additional check: if the array is not just empty white pixels
+        # Assuming white background is [255, 255, 255] in RGB
+        if np.all(signature == 255):
+            return False
+        return True
+    return False
 
 # Initialize session state variables if they do not exist
 if 'step' not in st.session_state:
@@ -140,7 +157,7 @@ elif st.session_state.step == 6:
 elif st.session_state.step == 7:
     st.title("> 6: Educational Background")
     st.session_state.previous_qualifications = st.text_area("Please list your previous qualifications.")
-    st.session_state.current_institution = st.text_input("Please enter the name of your current educational institution (if applicable).")
+    st.session_state.current_institution = st.text_input("Please enter the name of your current educational institution (if applicable, else put 'none').")
     if st.button("Next"):
         if st.session_state.previous_qualifications and st.session_state.current_institution:
             st.session_state.step = 8
@@ -150,7 +167,7 @@ elif st.session_state.step == 7:
 
 elif st.session_state.step == 8:
     st.title("> 7: Course Information")
-    
+        
     # Category selection
     categories = ["Select"] + list(category_courses.keys())
     st.session_state.category = st.selectbox("Please select the course category.", categories)
@@ -160,6 +177,8 @@ elif st.session_state.step == 8:
         courses = category_courses.get(st.session_state.category, [])
     else:
         courses = []
+    
+    # Store selected courses
     st.session_state.courses = st.multiselect("Please select the courses you are interested in.", courses)
     
     # Date and learning mode input
@@ -216,6 +235,7 @@ elif st.session_state.step == 11:
 elif st.session_state.step == 12:
     st.title("> 11: Signature")
     st.write("Please provide your signature below:")
+
     canvas_result = st_canvas(
         stroke_width=2,
         stroke_color="black",
@@ -227,8 +247,10 @@ elif st.session_state.step == 12:
         key="signature_canvas"
     )
     st.session_state.signature = canvas_result.image_data
+
     if st.button("Next"):
-        if st.session_state.signature is not None:
+        if is_signature_drawn(st.session_state.signature):
+        # if st.session_state.signature is not None:
             st.session_state.step = 13
             st.experimental_rerun()
         else:
@@ -239,7 +261,8 @@ elif st.session_state.step == 13:
     st.write("Thank you for providing your details. Please review your information and click 'Submit' to complete your enrolment.")
 
     st.write(f"**Full Name:** {st.session_state.personal_info}")
-    st.write(f"**Date of Birth:** {st.session_state.dob}")
+    dob = st.session_state.dob.strftime('%d-%m-%Y')
+    st.write(f"**Date of Birth:** {dob}")
     st.write(f"**Gender:** {st.session_state.gender}")
     st.write(f"**Nationality:** {st.session_state.nationality}")
     st.write(f"**Email:** {st.session_state.email}")
@@ -248,7 +271,8 @@ elif st.session_state.step == 13:
     st.write(f"**Previous Qualifications:** {st.session_state.previous_qualifications}")
     st.write(f"**Current Institution:** {st.session_state.current_institution}")
     st.write(f"**Course Interested In:** {st.session_state.course}")
-    st.write(f"**Preferred Start Date:** {st.session_state.start_date}")
+    start_date= st.session_state.start_date.strftime('%d-%m-%Y')
+    st.write(f"**Preferred Start Date:** {start_date}")
     st.write(f"**Learning Mode:** {st.session_state.learning_mode}")
     st.write(f"**Learning Preferences:** {st.session_state.learning_preferences}")
     st.write(f"**Special Requirements:** {st.session_state.special_requirements}")
@@ -258,7 +282,62 @@ elif st.session_state.step == 13:
         st.image(st.session_state.signature, caption="Your Signature")
 
     if st.button("Submit"):
-        st.write("Form submitted successfully!")
+        # Create a new Document
+        doc = Document()
+        doc.add_heading('Enrolment Form Submission', 0)
+
+        # Add form details
+        doc.add_paragraph(f'Full Name: {st.session_state.personal_info}')
+
+        dob = st.session_state.dob.strftime('%d-%m-%Y')
+        doc.add_paragraph(f'Date of Birth: {dob}')
+
+        doc.add_paragraph(f'Gender: {st.session_state.gender}')
+        doc.add_paragraph(f'Nationality: {st.session_state.nationality}')
+        doc.add_paragraph(f'Email: {st.session_state.email}')
+        doc.add_paragraph(f'Phone: {st.session_state.phone}')
+        doc.add_paragraph(f'Address: {st.session_state.address}')
+        doc.add_paragraph(f'Previous Qualifications: {st.session_state.previous_qualifications}')
+        doc.add_paragraph(f'Current Institution: {st.session_state.current_institution}')
+        
+        # Add selected courses
+        if st.session_state.courses:
+            courses_text = ", ".join(st.session_state.courses)
+            doc.add_paragraph(f'Course Interested In: {courses_text}')
+        else:
+            doc.add_paragraph(f'Course Interested In: None')
+
+        start_date= st.session_state.start_date.strftime('%d-%m-%Y')
+        doc.add_paragraph(f'Preferred Start Date: {start_date}')
+
+        doc.add_paragraph(f'Learning Mode: {st.session_state.learning_mode}')
+        doc.add_paragraph(f'Learning Preferences: {st.session_state.learning_preferences}')
+        doc.add_paragraph(f'Special Requirements: {st.session_state.special_requirements}')
+        doc.add_paragraph(f'Emergency Contact: {st.session_state.emergency_contact}')
+        
+        # Save the signature image if available
+        if st.session_state.signature is not None:
+            # Convert numpy array to PIL image
+            image_data = st.session_state.signature
+            image = Image.fromarray(image_data.astype(np.uint8))  # Ensure correct data type
+            
+            # Save the image to an in-memory file
+            image_stream = io.BytesIO()
+            image.save(image_stream, format='PNG')
+            image_stream.seek(0)
+            
+            # Add image to docx
+            doc.add_picture(image_stream, width=Inches(2))
+        
+        # Save the document
+        doc_path = f"Int_Form_Submission_{st.session_state.personal_info}.docx"
+        doc.save(doc_path)
+
+        # Inform the user
+        st.success("Response sent successfully!")
+
+
+
         # Reset the form for the next use
         st.session_state.step = 1
         st.session_state.personal_info = ""
@@ -270,10 +349,11 @@ elif st.session_state.step == 13:
         st.session_state.address = ""
         st.session_state.previous_qualifications = ""
         st.session_state.current_institution = ""
-        st.session_state.course = ""
+        st.session_state.courses = []  # Reset courses
         st.session_state.start_date = None
         st.session_state.learning_mode = ""
-        st.session_state.id_document = None
+        st.session_state.front_id_document = None
+        st.session_state.back_id_document = None
         st.session_state.address_proof = None
         st.session_state.additional_document = None
         st.session_state.learning_preferences = ""
