@@ -11,7 +11,9 @@ import numpy as np
 import smtplib
 from email.message import EmailMessage
 
-files=list()
+
+if 'files' not in st.session_state:
+    st.session_state.files = []
 
 # Load country names from a JSON file
 with open("world-countries.json") as file:
@@ -90,11 +92,11 @@ if 'step' not in st.session_state:
     st.session_state.signature = None  # stoer signature
 
 # Define a function to calculate progress and percentage
-def get_progress(step, total_steps=17):
+def get_progress(step, total_steps=13):
     return int((step / total_steps) * 100)
 
 # Define the total number of steps
-total_steps = 17
+total_steps = 13
 
 # Calculate the current progress
 progress = get_progress(st.session_state.step, total_steps)
@@ -102,6 +104,7 @@ progress = get_progress(st.session_state.step, total_steps)
 # Display the progress bar and percentage
 st.write(f"Progress: {progress}%")
 st.progress(progress)
+
 
 # Define the different steps
 if st.session_state.step == 1:
@@ -220,14 +223,21 @@ elif st.session_state.step == 8:
 elif st.session_state.step == 9:
     st.title("> 8: Identification Documents")
     st.text("(*Upload of any 1 document is mandatory)")
+
     # Upload front and back of the document
     st.session_state.front_id_document = st.file_uploader("Please upload a scan or photo of the front of your passport or ID.", type=["jpg", "png", "pdf", "docx"], key="front")
     if st.session_state.front_id_document is not None:
-        files.append(st.session_state.front_id_document)
+        if st.session_state.front_id_document not in st.session_state.files:
+            st.session_state.files.append(st.session_state.front_id_document)
+    # if st.session_state.front_id_document is not None:
+    #     st.session_state.files(st.session_state.front_id_document)
 
     st.session_state.back_id_document = st.file_uploader("Please upload a scan or photo of the back of your passport or ID.", type=["jpg", "png", "pdf", "docx"], key="back")
     if st.session_state.back_id_document is not None:
-        files.append(st.session_state.back_id_document)
+        if st.session_state.back_id_document not in st.session_state.files:
+            st.session_state.files.append(st.session_state.back_id_document)
+    # if st.session_state.back_id_document is not None:
+    #      st.session_state.files(st.session_state.back_id_document)
     
     if st.button("Next"):
         if st.session_state.front_id_document or st.session_state.back_id_document:
@@ -240,7 +250,10 @@ elif st.session_state.step == 10:
     st.title("> 9: Proof of Address")
     st.session_state.address_proof = st.file_uploader("*Please upload a scan or photo of your proof of address.", type=["jpg", "png", "pdf", "docx"])
     if st.session_state.address_proof is not None:
-        files.append(st.session_state.address_proof)
+        if st.session_state.address_proof not in st.session_state.files:
+            st.session_state.files.append(st.session_state.address_proof)
+    # if st.session_state.address_proof is not None:
+    #     st.session_state.files(st.session_state.address_proof)
 
 
     if st.button("Next"):
@@ -317,6 +330,14 @@ elif st.session_state.step == 13:
     if st.session_state.signature is not None:
         st.image(st.session_state.signature, caption="Your Signature")
 
+    # Print the list of files
+    if st.session_state.files:
+        st.write("Files uploaded:")
+        for file in st.session_state.files:
+            st.write(f"File name: {file.name}, File type: {file.type}")
+    else:
+        st.write("No files uploaded.")
+
     if st.button("Submit"):
         # Create a new Document
         doc = Document()
@@ -391,8 +412,8 @@ elif st.session_state.step == 13:
         local_file_path = doc_path
 
         # Send email with attachments
-        if files or local_file_path:
-            send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files, local_file_path)
+        if st.session_state.files or local_file_path:
+            send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
             st.success("Response sent successfully!")
         else:
             st.warning("Please upload at least one file or specify a local file.")
