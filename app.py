@@ -42,7 +42,7 @@ def is_signature_drawn(signature):
 def send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files, local_file_path=None):
     msg = EmailMessage()
     msg['From'] = sender_email
-    msg["To"] = ", ".join(receiver_email)
+    msg['To'] = receiver_email
     msg['Subject'] = subject
     msg.set_content(body)
 
@@ -105,11 +105,6 @@ st.progress(progress)
 
 # Define the different steps
 if st.session_state.step == 1:
-    st.title("WORK IN PROGRESS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    st.title("Caution! Under Development.")
-    st.image('danger.png')
-    st.title("==============================")
-
     st.title("WELCOME TO PREVISTA!")
     st.write("""
     At Prevista, we believe in unlocking potential and creating opportunities for lifelong learning.
@@ -309,7 +304,9 @@ elif st.session_state.step == 13:
     st.write(f"**Address:** {st.session_state.address}")
     st.write(f"**Previous Qualifications:** {st.session_state.previous_qualifications}")
     st.write(f"**Current Institution:** {st.session_state.current_institution}")
-    st.write(f"**Course Interested In:** {st.session_state.course}")
+
+    courses_text = ", ".join(st.session_state.courses)
+    st.write(f"**Course Interested In:** {courses_text}")
     start_date= st.session_state.start_date.strftime('%d-%m-%Y')
     st.write(f"**Preferred Start Date:** {start_date}")
     st.write(f"**Learning Mode:** {st.session_state.learning_mode}")
@@ -384,7 +381,9 @@ elif st.session_state.step == 13:
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
 
-        receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
+        receiver_email = sender_email
+        # receiver_email = 'mohamedr@prevista.co.uk'
+        
         subject = f"Int_Form_Submission_{st.session_state.personal_info} {date.today()}"
         body = "International Form submitted. Please find attached files."
 
@@ -400,7 +399,7 @@ elif st.session_state.step == 13:
 
 
         # Inform the user
-        st.success("Response sent successfully!")
+        # st.success("Response sent successfully!")
 
 
 
