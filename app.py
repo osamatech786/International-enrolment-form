@@ -46,7 +46,7 @@ def is_signature_drawn(signature):
 def send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files, local_file_path=None):
     msg = EmailMessage()
     msg['From'] = sender_email
-    msg['To'] = receiver_email
+    msg['To'] = ", ".join(receiver_email)
     msg['Subject'] = subject
     msg.set_content(body)
 
@@ -408,7 +408,8 @@ elif st.session_state.step == 13:
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
 
-        receiver_email = sender_email
+        receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
+        # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
         
         subject = f"Int_Form_Submission_{st.session_state.personal_info} {date.today()}"
