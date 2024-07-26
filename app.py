@@ -8,6 +8,10 @@ from docx.shared import Inches
 import io
 from PIL import Image
 import numpy as np
+import smtplib
+from email.message import EmailMessage
+
+files=list()
 
 # Load country names from a JSON file
 with open("world-countries.json") as file:
@@ -33,6 +37,32 @@ def is_signature_drawn(signature):
             return False
         return True
     return False
+
+# Function to send email with attachments (Handle Local + Uploaded)
+def send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files, local_file_path=None):
+    msg = EmailMessage()
+    msg['From'] = sender_email
+    msg["To"] = ", ".join(receiver_email)
+    msg['Subject'] = subject
+    msg.set_content(body)
+
+    # Attach uploaded files
+    for uploaded_file in files:
+        uploaded_file.seek(0)  # Move to the beginning of the UploadedFile
+        msg.add_attachment(uploaded_file.read(), maintype='application', subtype='octet-stream', filename=uploaded_file.name)
+
+    # Attach local file if specified
+    if local_file_path:
+        with open(local_file_path, 'rb') as f:
+            file_data = f.read()
+            file_name = local_file_path.split('/')[-1]
+            msg.add_attachment(file_data, maintype='application', subtype='octet-stream', filename=file_name)
+
+    # Use the SMTP server for sending the email
+    with smtplib.SMTP('smtp.office365.com', 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
 
 # Initialize session state variables if they do not exist
 if 'step' not in st.session_state:
@@ -197,7 +227,12 @@ elif st.session_state.step == 9:
     st.text("(*Upload of any 1 document is mandatory)")
     # Upload front and back of the document
     st.session_state.front_id_document = st.file_uploader("Please upload a scan or photo of the front of your passport or ID.", type=["jpg", "png", "pdf", "docx"], key="front")
+    if st.session_state.front_id_document is not None:
+        files.append(st.session_state.front_id_document)
+
     st.session_state.back_id_document = st.file_uploader("Please upload a scan or photo of the back of your passport or ID.", type=["jpg", "png", "pdf", "docx"], key="back")
+    if st.session_state.back_id_document is not None:
+        files.append(st.session_state.back_id_document)
     
     if st.button("Next"):
         if st.session_state.front_id_document or st.session_state.back_id_document:
@@ -209,6 +244,10 @@ elif st.session_state.step == 9:
 elif st.session_state.step == 10:
     st.title("> 9: Proof of Address")
     st.session_state.address_proof = st.file_uploader("*Please upload a scan or photo of your proof of address.", type=["jpg", "png", "pdf", "docx"])
+    if st.session_state.address_proof is not None:
+        files.append(st.session_state.address_proof)
+
+
     if st.button("Next"):
         if st.session_state.address_proof:
             st.session_state.step = 11
@@ -332,6 +371,33 @@ elif st.session_state.step == 13:
         # Save the document
         doc_path = f"Int_Form_Submission_{st.session_state.personal_info}.docx"
         doc.save(doc_path)
+
+
+        # Email
+        # Sender email credentials
+        # Credentials: Streamlit host st.secrets
+        sender_email = st.secrets["sender_email"]
+        sender_password = st.secrets["sender_password"]
+
+        # Credentials: Local env
+        # load_dotenv()                                     # uncomment import of this library!
+        # sender_email = os.getenv('EMAIL')
+        # sender_password = os.getenv('PASSWORD')
+
+        receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
+        subject = f"Int_Form_Submission_{st.session_state.personal_info} {date.today()}"
+        body = "International Form submitted. Please find attached files."
+
+        # Local file path
+        local_file_path = doc_path
+
+        # Send email with attachments
+        if files or local_file_path:
+            send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files, local_file_path)
+            st.success("Response sent successfully!")
+        else:
+            st.warning("Please upload at least one file or specify a local file.")
+
 
         # Inform the user
         st.success("Response sent successfully!")
