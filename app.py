@@ -1,6 +1,15 @@
 import streamlit as st
 from datetime import date
 from streamlit_drawable_canvas import st_canvas
+import json
+import pandas as pd
+
+# Load country names from a JSON file
+with open("world-countries.json") as file:
+    data = json.load(file)
+    countries = [entry['name'] for entry in data]
+countries = ["Select"] + sorted(countries)
+
 
 # Initialize session state variables if they do not exist
 if 'step' not in st.session_state:
@@ -36,17 +45,17 @@ total_steps = 17
 # Calculate the current progress
 progress = get_progress(st.session_state.step, total_steps)
 
-st.title("WORK IN PROGRESS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-st.title("Caution! Under Development.")
-st.image('danger.png')
-st.title("==============================")
-
 # Display the progress bar and percentage
 st.write(f"Progress: {progress}%")
 st.progress(progress)
 
 # Define the different steps
 if st.session_state.step == 1:
+    st.title("WORK IN PROGRESS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    st.title("Caution! Under Development.")
+    st.image('danger.png')
+    st.title("==============================")
+
     st.title("WELCOME TO PREVISTA!")
     st.write("""
     At Prevista, we believe in unlocking potential and creating opportunities for lifelong learning.
@@ -95,7 +104,8 @@ elif st.session_state.step == 4:
 
 elif st.session_state.step == 5:
     st.title("> 4: Nationality")
-    st.session_state.nationality = st.selectbox("Please select your nationality.", ["Select", "UK", "philippines", "India", "Pakistan", "Afghanistan", "Other"])
+    
+    st.session_state.nationality = st.selectbox("Please select your nationality.", countries)
     if st.button("Next"):
         if st.session_state.nationality != "Select":
             st.session_state.step = 6
@@ -246,3 +256,4 @@ else:
     st.write("Form completed. Thank you!")
 
 # streamlit run app.py --server.port 8503
+# Dev : https://linkedin.com/in/osamatech786
