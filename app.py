@@ -108,7 +108,10 @@ st.set_page_config(
     layout="centered"  # "centered" or "wide"
 )
 
-st.logo('resources\logo.png', link='https://www.prevista.co.uk/', icon_image=None)
+
+# logo
+# st.logo('resources\logo.png', link='https://www.prevista.co.uk/', icon_image=None)
+st.image('resources/logo.png', use_column_width=True)
 
 # Define the total number of steps
 total_steps = 14
