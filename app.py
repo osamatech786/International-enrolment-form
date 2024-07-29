@@ -111,7 +111,6 @@ st.set_page_config(
 
 # logo
 # st.logo('resources\logo.png', link='https://www.prevista.co.uk/', icon_image=None)
-st.image('resources/logo.png', use_column_width=True)
 
 # Define the total number of steps
 total_steps = 14
@@ -126,6 +125,8 @@ st.progress(progress)
 
 # Define the different steps
 if st.session_state.step == 1:
+    st.image('resources/logo.png', use_column_width=True)
+
     st.title("WELCOME TO PREVISTA!")
     st.write("""
     At Prevista, we believe in unlocking potential and creating opportunities for lifelong learning.
