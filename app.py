@@ -84,7 +84,7 @@ if 'step' not in st.session_state:
     st.session_state.previous_qualifications = ""
     st.session_state.current_institution = ""
     st.session_state.course = ""
-    st.session_state.start_date = None
+    # st.session_state.start_date = None
     st.session_state.learning_mode = ""
     st.session_state.front_id_document = None
     st.session_state.back_id_document = None
@@ -97,11 +97,21 @@ if 'step' not in st.session_state:
     st.session_state.signature = None  # stoer signature
 
 # Define a function to calculate progress and percentage
-def get_progress(step, total_steps=13):
+def get_progress(step, total_steps=14):
     return int((step / total_steps) * 100)
 
+
+# Set page configuration with a favicon
+st.set_page_config(
+    page_title="International Enrolment Form",
+    page_icon="https://lirp.cdn-website.com/d8120025/dms3rep/multi/opt/social-image-88w.png",  # Path to your logo
+    layout="centered"  # "centered" or "wide"
+)
+
+st.logo('resources\logo.png', link='https://www.prevista.co.uk/', icon_image=None)
+
 # Define the total number of steps
-total_steps = 13
+total_steps = 14
 
 # Calculate the current progress
 progress = get_progress(st.session_state.step, total_steps)
@@ -212,18 +222,29 @@ elif st.session_state.step == 8:
         courses = []
     
     # Store selected courses
-    st.session_state.courses = st.multiselect("Please select the courses you are interested in.", courses)
+    # st.session_state.courses = st.multiselect("Please select the courses you are interested in.", courses)
+    # Create checkboxes for each course
+    selected_courses = []
+    for course in courses:
+        if st.checkbox(course, key=course):
+            selected_courses.append(course)
+    # Update session state with selected courses
+    st.session_state.courses = selected_courses
     
     # Date and learning mode input
-    st.session_state.start_date = st.date_input("Please select your preferred start date for the course.", value=st.session_state.start_date or date.today(), format='DD/MM/YYYY')
-    st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Select", "Online", "In-Person", "Hybrid"])
+    # st.session_state.start_date = st.date_input("Please select your preferred start date for the course.", value=st.session_state.start_date or date.today(), format='DD/MM/YYYY')
+    # st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Select", "Online", "In-Person", "Hybrid"])
+    st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["In-Person"])
     
     if st.button("Next"):
-        if st.session_state.courses and st.session_state.start_date and st.session_state.learning_mode != "Select":
-            st.session_state.step = 9
+        # if st.session_state.courses and st.session_state.start_date and st.session_state.learning_mode != "Select":
+        if st.session_state.courses and st.session_state.learning_mode != "Select":
+
+            st.session_state.step = 10
             st.experimental_rerun()
         else:
-            st.warning("Please select your courses, preferred start date, and learning mode before proceeding.")
+            # st.warning("Please select your courses, preferred start date, and learning mode before proceeding.")
+            st.warning("Please select your courses.")
 
 elif st.session_state.step == 9:
     st.title("> 8: Identification Documents")
@@ -325,8 +346,8 @@ elif st.session_state.step == 13:
 
     courses_text = ", ".join(st.session_state.courses)
     st.write(f"**Course Interested In:** {courses_text}")
-    start_date= st.session_state.start_date.strftime('%d-%m-%Y')
-    st.write(f"**Preferred Start Date:** {start_date}")
+    # start_date= st.session_state.start_date.strftime('%d-%m-%Y')
+    # st.write(f"**Preferred Start Date:** {start_date}")
     st.write(f"**Learning Mode:** {st.session_state.learning_mode}")
     st.write(f"**Learning Preferences:** {st.session_state.learning_preferences}")
     st.write(f"**Special Requirements:** {st.session_state.special_requirements}")
@@ -371,8 +392,8 @@ elif st.session_state.step == 13:
         else:
             doc.add_paragraph(f'Course Interested In: None')
 
-        start_date= st.session_state.start_date.strftime('%d-%m-%Y')
-        doc.add_paragraph(f'Preferred Start Date: {start_date}')
+        # start_date= st.session_state.start_date.strftime('%d-%m-%Y')
+        # doc.add_paragraph(f'Preferred Start Date: {start_date}')
 
         doc.add_paragraph(f'Learning Mode: {st.session_state.learning_mode}')
         doc.add_paragraph(f'Learning Preferences: {st.session_state.learning_preferences}')
@@ -400,15 +421,14 @@ elif st.session_state.step == 13:
         # Email
         # Sender email credentials
         # Credentials: Streamlit host st.secrets
-        sender_email = st.secrets["sender_email"]
-        sender_password = st.secrets["sender_password"]
+        # sender_email = st.secrets["sender_email"]
+        # sender_password = st.secrets["sender_password"]
 
         # Credentials: Local env
         # load_dotenv()                                     # uncomment import of this library!
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
-
-        receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
+        # receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
         
@@ -420,7 +440,7 @@ elif st.session_state.step == 13:
 
         # Send email with attachments
         if st.session_state.files or local_file_path:
-            send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
+            # send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
             st.success("Response sent successfully!")
         else:
             st.warning("Please upload at least one file or specify a local file.")
@@ -432,30 +452,42 @@ elif st.session_state.step == 13:
 
 
         # Reset the form for the next use
-        st.session_state.step = 1
-        st.session_state.personal_info = ""
-        st.session_state.dob = None
-        st.session_state.gender = ""
-        st.session_state.nationality = ""
-        st.session_state.email = ""
-        st.session_state.phone = ""
-        st.session_state.address = ""
-        st.session_state.previous_qualifications = ""
-        st.session_state.current_institution = ""
-        st.session_state.courses = []  # Reset courses
-        st.session_state.start_date = None
-        st.session_state.learning_mode = ""
-        st.session_state.front_id_document = None
-        st.session_state.back_id_document = None
-        st.session_state.address_proof = None
-        st.session_state.additional_document = None
-        st.session_state.learning_preferences = ""
-        st.session_state.special_requirements = ""
-        st.session_state.emergency_contact = ""
-        st.session_state.consent = False
-        st.session_state.signature = None  # Clear the signature
+        # st.session_state.step = 1
+        # st.session_state.personal_info = ""
+        # st.session_state.dob = None
+        # st.session_state.gender = ""
+        # st.session_state.nationality = ""
+        # st.session_state.email = ""
+        # st.session_state.phone = ""
+        # st.session_state.address = ""
+        # st.session_state.previous_qualifications = ""
+        # st.session_state.current_institution = ""
+        # st.session_state.courses = []  # Reset courses
+        # # st.session_state.start_date = None
+        # st.session_state.learning_mode = ""
+        # st.session_state.front_id_document = None
+        # st.session_state.back_id_document = None
+        # st.session_state.address_proof = None
+        # st.session_state.additional_document = None
+        # st.session_state.learning_preferences = ""
+        # st.session_state.special_requirements = ""
+        # st.session_state.emergency_contact = ""
+        # st.session_state.consent = False
+        # st.session_state.signature = None  # Clear the signature
+
+        # Update session state to show the final thank you message
+        st.session_state.submission_done = True
+        st.session_state.step = 14  # Move to the final step to show the thank you message
+        st.experimental_rerun()
+
+# Add a new step for the thank you message
+elif st.session_state.step == 14:
+    st.title("Thank You!")
+    st.write("Someone will call you soon!")
 else:
     st.write("Form completed. Thank you!")
 
 # streamlit run app.py --server.port 8503
 # Dev : https://linkedin.com/in/osamatech786
+
+# 407, 408, 415, 419, 
