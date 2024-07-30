@@ -300,7 +300,10 @@ elif st.session_state.step == 11:
     st.session_state.emergency_contact = st.text_input("Please provide emergency contact details.")
     st.session_state.consent = st.checkbox("I consent to the collection and processing of my personal data according to Prevista’s privacy policy.")
     
-    st.write("[Privacy Policy](https://www.prevista.co.uk/policies)")  # Replace '#' with actual link to privacy policy
+    # st.write("[Privacy Policy](https://www.prevista.co.uk/policies)")  # Replace '#' with actual link to privacy policy
+    pdf_url = "resources\International%20Student%20Privacy%20Notice_30.07.2024_Rev.1.pdf"
+
+    st.markdown(f"[Privacy Policy]({pdf_url})", unsafe_allow_html=True)
 
     if st.button("Next"):
         if all([st.session_state.learning_preferences, st.session_state.special_requirements, st.session_state.emergency_contact, st.session_state.consent]):
