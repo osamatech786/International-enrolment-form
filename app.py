@@ -238,13 +238,13 @@ elif st.session_state.step == 8:
     # Date and learning mode input
     # st.session_state.start_date = st.date_input("Please select your preferred start date for the course.", value=st.session_state.start_date or date.today(), format='DD/MM/YYYY')
     # st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Select", "Online", "In-Person", "Hybrid"])
-    st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["In-Person"])
+    st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Online"])
     
     if st.button("Next"):
         # if st.session_state.courses and st.session_state.start_date and st.session_state.learning_mode != "Select":
         if st.session_state.courses and st.session_state.learning_mode != "Select":
 
-            st.session_state.step = 10
+            st.session_state.step = 11
             st.experimental_rerun()
         else:
             # st.warning("Please select your courses, preferred start date, and learning mode before proceeding.")
@@ -282,8 +282,6 @@ elif st.session_state.step == 10:
     if st.session_state.address_proof is not None:
         if st.session_state.address_proof not in st.session_state.files:
             st.session_state.files.append(st.session_state.address_proof)
-    # if st.session_state.address_proof is not None:
-    #     st.session_state.files(st.session_state.address_proof)
 
 
     if st.button("Next"):
@@ -300,10 +298,8 @@ elif st.session_state.step == 11:
     st.session_state.emergency_contact = st.text_input("Please provide emergency contact details.")
     st.session_state.consent = st.checkbox("I consent to the collection and processing of my personal data according to Prevista’s privacy policy.")
     
-    # st.write("[Privacy Policy](https://www.prevista.co.uk/policies)")  # Replace '#' with actual link to privacy policy
-    pdf_url = "resources\International%20Student%20Privacy%20Notice_30.07.2024_Rev.1.pdf"
-
-    st.markdown(f"[Privacy Policy]({pdf_url})", unsafe_allow_html=True)
+    privacy_policy_doc_link = 'https://previstaltd-my.sharepoint.com/:b:/g/personal/muhammadoa_prevista_co_uk/EfQFSBx5gZRDjsD-WM8UxEUBV_H22rVkGD6bB9nDKDLokQ?e=4pjc4s'
+    st.write(f"[Privacy Policy]({privacy_policy_doc_link})")  # Replace '#' with actual link to privacy policy
 
     if st.button("Next"):
         if all([st.session_state.learning_preferences, st.session_state.special_requirements, st.session_state.emergency_contact, st.session_state.consent]):
@@ -428,14 +424,14 @@ elif st.session_state.step == 13:
         # Email
         # Sender email credentials
         # Credentials: Streamlit host st.secrets
-        # sender_email = st.secrets["sender_email"]
-        # sender_password = st.secrets["sender_password"]
+        sender_email = st.secrets["sender_email"]
+        sender_password = st.secrets["sender_password"]
 
         # Credentials: Local env
         # load_dotenv()                                     # uncomment import of this library!
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
-        # receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
+        receiver_email = [sender_email, 'mohamedr@prevista.co.uk']
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
         
@@ -447,7 +443,7 @@ elif st.session_state.step == 13:
 
         # Send email with attachments
         if st.session_state.files or local_file_path:
-            # send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
+            send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
             st.success("Response sent successfully!")
         else:
             st.warning("Please upload at least one file or specify a local file.")
@@ -490,11 +486,9 @@ elif st.session_state.step == 13:
 # Add a new step for the thank you message
 elif st.session_state.step == 14:
     st.title("Thank You!")
-    st.write("Someone will call you soon!")
+    st.write("Check your email for the final boarding.")
 else:
     st.write("Form completed. Thank you!")
 
 # streamlit run app.py --server.port 8503
 # Dev : https://linkedin.com/in/osamatech786
-
-# 407, 408, 415, 419, 
