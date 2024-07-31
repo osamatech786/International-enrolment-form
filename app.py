@@ -77,7 +77,7 @@ if 'step' not in st.session_state:
     st.session_state.personal_info = ""
     st.session_state.dob = None
     st.session_state.gender = ""
-    st.session_state.nationality = ""
+    st.session_state.country = ""
     st.session_state.email = ""
     st.session_state.phone = ""
     st.session_state.address = ""
@@ -179,15 +179,15 @@ elif st.session_state.step == 4:
             st.warning("Please select your gender before proceeding.")
 
 elif st.session_state.step == 5:
-    st.title("> 4: Nationality")
+    st.title("> 4: Country")
     
-    st.session_state.nationality = st.selectbox("Please select your nationality.", countries)
+    st.session_state.country = st.selectbox("Please select your country.", countries)
     if st.button("Next"):
-        if st.session_state.nationality != "Select":
+        if st.session_state.country != "Select":
             st.session_state.step = 6
             st.experimental_rerun()
         else:
-            st.warning("Please select your nationality before proceeding.")
+            st.warning("Please select your country before proceeding.")
 
 elif st.session_state.step == 6:
     st.title("> 5: Contact Information")
@@ -340,7 +340,7 @@ elif st.session_state.step == 13:
     dob = st.session_state.dob.strftime('%d-%m-%Y')
     st.write(f"**Date of Birth:** {dob}")
     st.write(f"**Gender:** {st.session_state.gender}")
-    st.write(f"**Nationality:** {st.session_state.nationality}")
+    st.write(f"**Country:** {st.session_state.country}")
     st.write(f"**Email:** {st.session_state.email}")
     st.write(f"**Phone:** {st.session_state.phone}")
     st.write(f"**Address:** {st.session_state.address}")
@@ -381,7 +381,7 @@ elif st.session_state.step == 13:
         doc.add_paragraph(f'Date of Birth: {dob}')
 
         doc.add_paragraph(f'Gender: {st.session_state.gender}')
-        doc.add_paragraph(f'Nationality: {st.session_state.nationality}')
+        doc.add_paragraph(f'Country: {st.session_state.country}')
         doc.add_paragraph(f'Email: {st.session_state.email}')
         doc.add_paragraph(f'Phone: {st.session_state.phone}')
         doc.add_paragraph(f'Address: {st.session_state.address}')
@@ -435,7 +435,7 @@ elif st.session_state.step == 13:
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
         
-        subject = f"Int_Form_Submission_{st.session_state.personal_info} {date.today()}"
+        subject = f"Int_Form_Submission_{st.session_state.category}_{st.session_state.country}_{st.session_state.personal_info}_{date.today()}"
         body = "International Form submitted. Please find attached files."
 
         # Local file path
@@ -444,9 +444,9 @@ elif st.session_state.step == 13:
         # Send email with attachments
         if st.session_state.files or local_file_path:
             send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
-            st.success("Response sent successfully!")
-        else:
-            st.warning("Please upload at least one file or specify a local file.")
+        #     st.success("Response sent successfully!")
+        # else:
+        #     st.warning("Please upload at least one file or specify a local file.")
 
 
         # Inform the user
@@ -459,7 +459,7 @@ elif st.session_state.step == 13:
         # st.session_state.personal_info = ""
         # st.session_state.dob = None
         # st.session_state.gender = ""
-        # st.session_state.nationality = ""
+        # st.session_state.country = ""
         # st.session_state.email = ""
         # st.session_state.phone = ""
         # st.session_state.address = ""
