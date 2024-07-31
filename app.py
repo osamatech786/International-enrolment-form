@@ -435,7 +435,7 @@ elif st.session_state.step == 13:
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
         
-        subject = f"Int_Form_Submission_{st.session_state.category}_{st.session_state.country}_{st.session_state.personal_info}_{date.today()}"
+        subject = f"Int_Form_Submission Course: {st.session_state.category} Country: {st.session_state.country} Name: {st.session_state.personal_info} Submission Date: {date.today()}"
         body = "International Form submitted. Please find attached files."
 
         # Local file path
