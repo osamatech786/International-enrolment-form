@@ -296,7 +296,7 @@ elif st.session_state.step == 11:
     st.session_state.emergency_contact = st.text_input("Please provide emergency contact details.")
     st.session_state.consent = st.checkbox("I consent to the collection and processing of my personal data according to Prevista’s privacy policy.")
     
-    privacy_policy_doc_link = 'https://previstaltd-my.sharepoint.com/:b:/g/personal/muhammadoa_prevista_co_uk/EfQFSBx5gZRDjsD-WM8UxEUBV_H22rVkGD6bB9nDKDLokQ?e=4pjc4s'
+    privacy_policy_doc_link = 'https://previstaltd-my.sharepoint.com/:b:/g/personal/muhammadoa_prevista_co_uk/EbObssIa581KhS3Hjhl7gsEBojEcidZgv2YPRj7D5odbeg?e=w4slD6'
     st.write(f"[Privacy Policy]({privacy_policy_doc_link})")  # Replace '#' with actual link to privacy policy
 
     if st.button("Next"):
