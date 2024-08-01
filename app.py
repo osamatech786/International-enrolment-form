@@ -433,7 +433,7 @@ elif st.session_state.step == 13:
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
 
-        learner_email = st.session_state.email
+        learner_email = [st.session_state.email]
         
         subject_team = f"Int_Form_Submission Course: {st.session_state.category} Country: {st.session_state.country} Name: {st.session_state.personal_info} Submission Date: {date.today()}"
         body_team = "International Form submitted. Please find attached files."
