@@ -464,10 +464,10 @@ elif st.session_state.step == 13:
 
         # Send email to team with attachments
         if st.session_state.files or doc_path:
-            send_email_with_attachments(sender_email, sender_password, [team_email], subject_team, body_team, st.session_state.files, doc_path)
+            send_email_with_attachments(sender_email, sender_password, team_email, subject_team, body_team, st.session_state.files, doc_path)
         
         # Send thank you email to learner
-        send_email_with_attachments(sender_email, sender_password, [learner_email], subject_learner, body_learner)
+        send_email_with_attachments(sender_email, sender_password, learner_email, subject_learner, body_learner)
 
 
 
