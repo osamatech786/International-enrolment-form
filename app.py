@@ -48,7 +48,7 @@ def send_email_with_attachments(sender_email, sender_password, receiver_email, s
     msg['From'] = sender_email
     msg['To'] = ", ".join(receiver_email)
     msg['Subject'] = subject
-    msg.set_content(body)
+    msg.set_content(body, subtype='html')
 
     # Attach uploaded files
     if files:
@@ -440,27 +440,31 @@ elif st.session_state.step == 13:
 
         subject_learner = "Thank You for Your Interest in Our Courses!"
         body_learner = f"""
-        Dear {st.session_state.personal_info},
+        <html>
+        <body>
+            <p>Dear {st.session_state.personal_info},</p>
 
-        Thank you for expressing your interest in our courses at PREVISTA. We are excited to guide you through the next steps of the enrollment process.
+            <p>Thank you for expressing your interest in our courses at PREVISTA. We are excited to guide you through the next steps of the enrollment process.</p>
 
-        *What’s Next?*
+            <p><strong>What’s Next?</strong></p>
+            <ol>
+                <li><strong>Enrollment Communication:</strong> One of our representatives will be contacting you within the next few days to complete your enrollment. Please keep an eye out for our message to finalize your registration details.</li>
+                <li><strong>Course Start Date:</strong> Once your enrollment is confirmed, we will send you the schedule for the course start date.</li>
+                <li><strong>Orientation Session:</strong> You will be invited to an orientation session where you can learn more about the platform, meet your instructors, and connect with other learners.</li>
+            </ol>
 
-        1. *Enrollment Communication*: One of our representatives will be contacting you within the next few days to complete your enrollment. Please keep an eye out for our message to finalize your registration details.
-        2. *Course Start Date*: Once your enrollment is confirmed, we will send you the schedule for the course start date.
-        3. *Orientation Session*: You will be invited to an orientation session where you can learn more about the platform, meet your instructors, and connect with other learners.
+            <p>If you have any immediate questions, please feel free to reach out to us at [support email] or [support phone number].</p>
 
-        If you have any immediate questions, please feel free to reach out to us at [support email] or [support phone number].
+            <p>We look forward to speaking with you soon and welcoming you to our learning community!</p>
 
-        We look forward to speaking with you soon and welcoming you to our learning community!
-
-        Best regards,
-
-        Student Admissions Team  
-
-        PREVISTA 
-        PREPARING YOU TODAY FOR OPPORTUNITIES OF TOMORROW
+            <p>Best regards,</p>
+            <p>Student Admissions Team<br>
+            PREVISTA<br>
+            PREPARING YOU TODAY FOR OPPORTUNITIES OF TOMORROW</p>
+        </body>
+        </html>
         """
+
 
         # Send email to team with attachments
         if st.session_state.files or doc_path:
