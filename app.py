@@ -431,7 +431,7 @@ elif st.session_state.step == 13:
         # load_dotenv()                                     # uncomment import of this library!
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
-        receiver_email = [sender_email, 'muhammadoa@prevista.co.uk', 'mohamedr@prevista.co.uk']
+        receiver_email = [sender_email, 'muhammadoa@prevista.co.uk']
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
         
