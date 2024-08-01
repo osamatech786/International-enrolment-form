@@ -43,7 +43,7 @@ def is_signature_drawn(signature):
     return False
 
 # Function to send email with attachments (Handle Local + Uploaded)
-def send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files, local_file_path=None):
+def send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, files=None, local_file_path=None):
     msg = EmailMessage()
     msg['From'] = sender_email
     msg['To'] = ", ".join(receiver_email)
@@ -51,12 +51,10 @@ def send_email_with_attachments(sender_email, sender_password, receiver_email, s
     msg.set_content(body)
 
     # Attach uploaded files
-    for uploaded_file in files:
-        try:
+    if files:
+        for uploaded_file in files:
             uploaded_file.seek(0)  # Move to the beginning of the UploadedFile
             msg.add_attachment(uploaded_file.read(), maintype='application', subtype='octet-stream', filename=uploaded_file.name)
-        except Exception as e:
-            print(f"Error attaching file {uploaded_file.name}: {e}")
 
     # Attach local file if specified
     if local_file_path:
@@ -431,26 +429,45 @@ elif st.session_state.step == 13:
         # load_dotenv()                                     # uncomment import of this library!
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
-        receiver_email = [sender_email, 'muhammadoa@prevista.co.uk']
+        team_email = [sender_email, 'muhammadoa@prevista.co.uk']
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
+
+        learner_email = st.session_state.email
         
-        subject = f"Int_Form_Submission Course: {st.session_state.category} Country: {st.session_state.country} Name: {st.session_state.personal_info} Submission Date: {date.today()}"
-        body = "International Form submitted. Please find attached files."
+        subject_team = f"Int_Form_Submission Course: {st.session_state.category} Country: {st.session_state.country} Name: {st.session_state.personal_info} Submission Date: {date.today()}"
+        body_team = "International Form submitted. Please find attached files."
 
-        # Local file path
-        local_file_path = doc_path
+        subject_learner = "Thank You for Your Interest in Our Courses!"
+        body_learner = f"""
+        Dear {st.session_state.personal_info},
 
-        # Send email with attachments
-        if st.session_state.files or local_file_path:
-            send_email_with_attachments(sender_email, sender_password, receiver_email, subject, body, st.session_state.files, local_file_path)
-        #     st.success("Response sent successfully!")
-        # else:
-        #     st.warning("Please upload at least one file or specify a local file.")
+        Thank you for expressing your interest in our courses at PREVISTA. We are excited to guide you through the next steps of the enrollment process.
 
+        *What’s Next?*
 
-        # Inform the user
-        # st.success("Response sent successfully!")
+        1. *Enrollment Communication*: One of our representatives will be contacting you within the next few days to complete your enrollment. Please keep an eye out for our message to finalize your registration details.
+        2. *Course Start Date*: Once your enrollment is confirmed, we will send you the schedule for the course start date.
+        3. *Orientation Session*: You will be invited to an orientation session where you can learn more about the platform, meet your instructors, and connect with other learners.
+
+        If you have any immediate questions, please feel free to reach out to us at [support email] or [support phone number].
+
+        We look forward to speaking with you soon and welcoming you to our learning community!
+
+        Best regards,
+
+        Student Admissions Team  
+
+        PREVISTA 
+        PREPARING YOU TODAY FOR OPPORTUNITIES OF TOMORROW
+        """
+
+        # Send email to team with attachments
+        if st.session_state.files or doc_path:
+            send_email_with_attachments(sender_email, sender_password, [team_email], subject_team, body_team, st.session_state.files, doc_path)
+        
+        # Send thank you email to learner
+        send_email_with_attachments(sender_email, sender_password, [learner_email], subject_learner, body_learner)
 
 
 
