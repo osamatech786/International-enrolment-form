@@ -153,7 +153,7 @@ elif st.session_state.step == 3:
     st.title("> 2: Date of Birth")
     st.session_state.dob = st.date_input("Please select your date of birth.", 
                                         min_value=date(1900, 1, 1),  # Minimum selectable date
-                                        max_value=date(2025, 12, 31),  # Maximum selectable date
+                                        max_value=date.today(),  # Maximum selectable date
                                         key="date_of_borth",  # Unique key for the widget
                                         help="Choose a date",  # Tooltip text
                                         value=st.session_state.dob or datetime(2000, 1, 1), 
@@ -435,7 +435,7 @@ elif st.session_state.step == 13:
 
         learner_email = [st.session_state.email]
         
-        subject_team = f"Int_Form_Submission Course: {st.session_state.category} Country: {st.session_state.country} Name: {st.session_state.personal_info} Submission Date: {date.today()}"
+        subject_team = f"Int_Form: Course: {st.session_state.category} Country: {st.session_state.country} Name: {st.session_state.personal_info} Submission Date: {date.today()}"
         body_team = "International Form submitted. Please find attached files."
 
         subject_learner = "Thank You for Your Interest in Our Courses!"
