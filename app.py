@@ -29,6 +29,22 @@ df = df.drop_duplicates(subset=['Category', 'Course Title'])
 category_courses = df.groupby('Category')['Course Title'].apply(list).to_dict()
 category_courses = df.groupby('Category')['Course Title'].apply(lambda x: sorted(set(x))).to_dict()
 
+def is_valid_email(email):
+    # Comprehensive regex for email validation
+    pattern = r'''
+        ^                         # Start of string
+        (?!.*[._%+-]{2})          # No consecutive special characters
+        [a-zA-Z0-9._%+-]{1,64}    # Local part: allowed characters and length limit
+        (?<![._%+-])              # No special characters at the end of local part
+        @                         # "@" symbol
+        [a-zA-Z0-9.-]+            # Domain part: allowed characters
+        (?<![.-])                 # No special characters at the end of domain
+        \.[a-zA-Z]{2,}$           # Top-level domain with minimum 2 characters
+    '''
+    
+    # Match the entire email against the pattern
+    return re.match(pattern, email, re.VERBOSE) is not None
+
 def is_signature_drawn(signature):
     # Check if signature is None or an empty numpy array
     if signature is None:
@@ -193,11 +209,15 @@ elif st.session_state.step == 6:
     st.session_state.phone = st.text_input("Please enter your phone number.")
     st.session_state.address = st.text_area("Please enter your complete mailing address.")
     if st.button("Next"):
-        if st.session_state.email and st.session_state.phone and st.session_state.address:
-            st.session_state.step = 7
-            st.experimental_rerun()
+        if (is_valid_email(st.session_state.email)):
+            if st.session_state.phone and st.session_state.address:
+                st.session_state.step = 7
+                st.experimental_rerun()
+            else:
+                st.warning("Please enter all contact information fields before proceeding.")
         else:
-            st.warning("Please enter all contact information fields before proceeding.")
+            st.warning("Please enter valid email address.")
+    
 
 elif st.session_state.step == 7:
     st.title("> 6: Educational Background")
