@@ -10,6 +10,8 @@ from PIL import Image
 import numpy as np
 import smtplib
 from email.message import EmailMessage
+import re
+
 # from dotenv import load_dotenv
 # import os
 
