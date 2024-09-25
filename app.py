@@ -26,7 +26,7 @@ with open("world-countries.json") as file:
 countries = ["Select"] + sorted(countries)
 
 # Load and process the Excel file
-df = pd.read_excel('restricted_courses.xlsx', sheet_name=0)
+df = pd.read_excel('courses.xlsx', sheet_name=0)
 df = df.drop_duplicates(subset=['Category', 'Course Title'])
 category_courses = df.groupby('Category')['Course Title'].apply(list).to_dict()
 category_courses = df.groupby('Category')['Course Title'].apply(lambda x: sorted(set(x))).to_dict()
