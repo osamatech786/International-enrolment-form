@@ -11,10 +11,31 @@ import numpy as np
 import smtplib
 from email.message import EmailMessage
 import re
+from dotenv import load_dotenv
+import os
 
-# from dotenv import load_dotenv
-# import os
+# Set page configuration with a favicon
+st.set_page_config(
+    page_title="International Enrolment Form",
+    page_icon="https://lirp.cdn-website.com/d8120025/dms3rep/multi/opt/social-image-88w.png",  # Path to your logo
+    layout="centered"  # "centered" or "wide"
+)
 
+# add render support along with st.secret
+def get_secret(key):
+    try:
+        load_dotenv()
+        # Attempt to get the secret from environment variables
+        secret = os.environ.get(key)
+        if secret is None:
+            raise ValueError("Secret not found in environment variables")
+        return secret
+    except (ValueError, TypeError) as e:
+        # If an error occurs, fall back to Streamlit secrets
+        if hasattr(st, 'secrets'):
+            return st.secrets.get(key)
+        # If still not found, return None or handle as needed
+        return None
 
 if 'files' not in st.session_state:
     st.session_state.files = []
@@ -26,7 +47,8 @@ with open("world-countries.json") as file:
 countries = ["Select"] + sorted(countries)
 
 # Load and process the Excel file
-df = pd.read_excel('courses.xlsx', sheet_name=0)
+# df = pd.read_excel('courses.xlsx', sheet_name=0)
+df = pd.read_excel('restricted_courses.xlsx', sheet_name=0)
 df = df.drop_duplicates(subset=['Category', 'Course Title'])
 category_courses = df.groupby('Category')['Course Title'].apply(list).to_dict()
 category_courses = df.groupby('Category')['Course Title'].apply(lambda x: sorted(set(x))).to_dict()
@@ -90,39 +112,31 @@ def send_email_with_attachments(sender_email, sender_password, receiver_email, s
 # Initialize session state variables if they do not exist
 if 'step' not in st.session_state:
     st.session_state.step = 1
-    st.session_state.personal_info = ""
-    st.session_state.dob = None
-    st.session_state.gender = ""
-    st.session_state.country = ""
-    st.session_state.email = ""
-    st.session_state.phone = ""
-    st.session_state.address = ""
-    st.session_state.previous_qualifications = ""
-    st.session_state.current_institution = ""
-    st.session_state.course = ""
-    # st.session_state.start_date = None
-    st.session_state.learning_mode = ""
-    st.session_state.front_id_document = None
-    st.session_state.back_id_document = None
-    st.session_state.address_proof = None
-    st.session_state.additional_document = None
-    st.session_state.learning_preferences = ""
-    st.session_state.special_requirements = ""
-    st.session_state.emergency_contact = ""
-    st.session_state.consent = False
-    st.session_state.signature = None  # stoer signature
+    st.session_state.submission_done = False
+    st.session_state.personal_info = ""  # Full name
+    st.session_state.dob = None  # Date of birth
+    st.session_state.gender = "Select"  # Gender
+    st.session_state.country = ""  # Country of residence
+    st.session_state.email = ""  # Email address
+    st.session_state.phone = ""  # Phone number
+    st.session_state.address = ""  # Residential address
+    st.session_state.previous_qualifications = ""  # Previous qualifications
+    st.session_state.current_institution = ""  # Current institution
+    # st.session_state.start_date = None  # Uncomment if needed
+    st.session_state.front_id_document = None  # Front ID document
+    st.session_state.back_id_document = None  # Back ID document
+    st.session_state.address_proof = None  # Address proof document
+    st.session_state.additional_document = None  # Additional documents if needed
+    st.session_state.learning_preferences = ""  # Learning preferences
+    st.session_state.special_requirements = ""  # Special requirements
+    st.session_state.emergency_contact = ""  # Emergency contact information
+    st.session_state.consent = False  # Consent for data processing
+    st.session_state.signature = None  # Store signature
+
 
 # Define a function to calculate progress and percentage
 def get_progress(step, total_steps=14):
     return int((step / total_steps) * 100)
-
-
-# Set page configuration with a favicon
-st.set_page_config(
-    page_title="International Enrolment Form",
-    page_icon="https://lirp.cdn-website.com/d8120025/dms3rep/multi/opt/social-image-88w.png",  # Path to your logo
-    layout="centered"  # "centered" or "wide"
-)
 
 
 # logo
@@ -159,116 +173,274 @@ if st.session_state.step == 1:
 
 elif st.session_state.step == 2:
     st.title("> 1: Personal Information")
-    st.session_state.personal_info = st.text_input("Please enter your full name as it appears on your official documents.")
-    if st.button("Next"):
-        if st.session_state.personal_info:
-            st.session_state.step = 3
-            st.experimental_rerun()
+    
+    # Ensure the personal_info variable is correctly set from the session state
+    st.session_state.personal_info = st.text_input(
+        "Please enter your full name as it appears on your official documents.",
+        value=st.session_state.personal_info  # Retain previous value
+    )
+
+    # Next and Back buttons for navigation
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
+        if st.session_state.personal_info:  # Check if the field is not empty
+            st.session_state.step = 3  # Move to the next step
+            st.experimental_rerun()  # Refresh the app to reflect the new step
         else:
             st.warning("Please enter your full name before proceeding.")
 
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 1  # Go back to the previous step (Section 1)
+        st.experimental_rerun()  # Refresh to update the step
+
+
 elif st.session_state.step == 3:
     st.title("> 2: Date of Birth")
-    st.session_state.dob = st.date_input("Please select your date of birth.", 
-                                        min_value=date(1900, 1, 1),  # Minimum selectable date
-                                        max_value=date.today(),  # Maximum selectable date
-                                        key="date_of_borth",  # Unique key for the widget
-                                        help="Choose a date",  # Tooltip text
-                                        value=st.session_state.dob or datetime(2000, 1, 1), 
-                                        format='DD/MM/YYYY')
+    # Check if dob is a string and convert it back to a date object
+    if isinstance(st.session_state.get("dob"), str):
+        st.session_state.dob = datetime.strptime(st.session_state.get("dob"), "%d-%m-%Y").date()
+
+    # Date of Birth
+    st.session_state.dob = st.date_input(
+        label="Date of Birth",  # Label for the field
+        value=st.session_state.get("dob"),  # Correctly access dob from session state
+        min_value=date(1900, 1, 1),  # Minimum selectable date
+        max_value=date.today(),  # Maximum selectable date
+        help="Choose a date",  # Tooltip text
+        format='DD/MM/YYYY'
+    )
     
-    if st.button("Next"):
+    # Next and Back buttons for navigation
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if st.session_state.dob:
+            # Convert the selected date to the desired string format (DD-MM-YYYY) only when proceeding to the next step
+            # st.session_state.dob = st.session_state.dob.strftime("%d-%m-%Y")
+
             st.session_state.step = 4
             st.experimental_rerun()
         else:
             st.warning("Please select your date of birth before proceeding.")
 
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 2  # Go back to the previous step (Section 1)
+        st.experimental_rerun()
+
 elif st.session_state.step == 4:
     st.title("> 3: Gender")
-    st.session_state.gender = st.selectbox("Please select your gender.", ["Select", "Male", "Female", "Other"])
-    if st.button("Next"):
+
+    # Initialize gender if it doesn't exist
+    if 'gender' not in st.session_state:
+        st.session_state.gender = "Select"  # Default value
+
+    # Select gender using the selectbox, retaining the previous value
+    st.session_state.gender = st.selectbox(
+        "Please select your gender.", 
+        ["Select", "Male", "Female", "Other"],
+        index=["Select", "Male", "Female", "Other"].index(st.session_state.gender)  # Set default value based on session state
+    )
+
+    # Next and Back buttons for navigation
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if st.session_state.gender != "Select":
             st.session_state.step = 5
             st.experimental_rerun()
         else:
             st.warning("Please select your gender before proceeding.")
 
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 3  # Go back to the previous step (Section 2)
+        st.experimental_rerun()
+
+
 elif st.session_state.step == 5:
     st.title("> 4: Country")
     
-    st.session_state.country = st.selectbox("Please select your country.", countries)
-    if st.button("Next"):
+    # Initialize country if it doesn't exist
+    if 'country' not in st.session_state:
+        st.session_state.country = "Select"  # Default value
+
+    # Select country using the selectbox, retaining the previous value
+    st.session_state.country = st.selectbox(
+        "Please select your country.", 
+        countries,
+        index=countries.index(st.session_state.country) if st.session_state.country in countries else 0  # Set default value based on session state
+    )
+
+    # Next and Back buttons for navigation
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if st.session_state.country != "Select":
             st.session_state.step = 6
             st.experimental_rerun()
         else:
             st.warning("Please select your country before proceeding.")
 
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 4  # Go back to the previous step (Section 3)
+        st.experimental_rerun()
+
+
 elif st.session_state.step == 6:
     st.title("> 5: Contact Information")
-    st.session_state.email = st.text_input("Please enter your email address where we can reach you.")
-    st.session_state.phone = st.text_input("Please enter your phone number.")
-    st.session_state.address = st.text_area("Please enter your complete mailing address.")
-    if st.button("Next"):
-        if (is_valid_email(st.session_state.email)):
+    
+    # Initialize fields if they do not exist
+    if 'email' not in st.session_state:
+        st.session_state.email = ""  # Default to empty string
+    if 'phone' not in st.session_state:
+        st.session_state.phone = ""  # Default to empty string
+    if 'address' not in st.session_state:
+        st.session_state.address = ""  # Default to empty string
+
+    # Input fields with default values from session state
+    st.session_state.email = st.text_input("Please enter your email address where we can reach you.", value=st.session_state.email)
+    st.session_state.phone = st.text_input("Please enter your phone number.", value=st.session_state.phone)
+    st.session_state.address = st.text_area("Please enter your complete mailing address.", value=st.session_state.address)
+
+    # Next and Back buttons for navigation
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click with validation
+    if next_clicked:
+        if is_valid_email(st.session_state.email):  # Validate email function should be defined
             if st.session_state.phone and st.session_state.address:
                 st.session_state.step = 7
                 st.experimental_rerun()
             else:
                 st.warning("Please enter all contact information fields before proceeding.")
         else:
-            st.warning("Please enter valid email address.")
+            st.warning("Please enter a valid email address.")
     
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 5  # Go back to the previous step (Section 4)
+        st.experimental_rerun()
 
 elif st.session_state.step == 7:
     st.title("> 6: Educational Background")
-    st.session_state.previous_qualifications = st.text_area("Please list your previous qualifications.")
-    st.session_state.current_institution = st.text_input("Please enter the name of your current educational institution (if applicable, else put 'none').")
-    if st.button("Next"):
+
+    # Initialize fields if they do not exist
+    if 'previous_qualifications' not in st.session_state:
+        st.session_state.previous_qualifications = ""  # Default to empty string
+    if 'current_institution' not in st.session_state:
+        st.session_state.current_institution = ""  # Default to empty string
+
+    # Input fields with default values from session state
+    st.session_state.previous_qualifications = st.text_area(
+        "Please list your previous qualifications.", 
+        value=st.session_state.previous_qualifications
+    )
+    st.session_state.current_institution = st.text_input(
+        "Please enter the name of your current educational institution (if applicable, else put 'none').", 
+        value=st.session_state.current_institution
+    )
+
+    # Navigation buttons
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if st.session_state.previous_qualifications and st.session_state.current_institution:
             st.session_state.step = 8
             st.experimental_rerun()
         else:
             st.warning("Please list your previous qualifications and current institution before proceeding.")
 
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 6  # Go back to the previous step (Section 5)
+        st.experimental_rerun()
+
+
 elif st.session_state.step == 8:
     st.title("> 7: Course Information")
-        
+
+    # Initialize category and courses if they do not exist
+    if 'category' not in st.session_state:
+        st.session_state.category = "Select"  # Default value
+    if 'courses' not in st.session_state:
+        st.session_state.courses = []  # Default to empty list
+    if 'learning_mode' not in st.session_state:
+        st.session_state.learning_mode = "Select"  # Default value
+
     # Category selection
     categories = ["Select"] + list(category_courses.keys())
-    st.session_state.category = st.selectbox("Please select the course category.", categories)
-    
+    st.session_state.category = st.selectbox(
+        "Please select the course category.", 
+        categories, 
+        index=categories.index(st.session_state.category)  # Set default value based on session state
+    )
+
     # Dynamically update course options based on the selected category
     if st.session_state.category != "Select":
         courses = category_courses.get(st.session_state.category, [])
     else:
         courses = []
-    
-    # Store selected courses
-    # st.session_state.courses = st.multiselect("Please select the courses you are interested in.", courses)
-    # Create checkboxes for each course
-    selected_courses = []
+
+    # Create checkboxes for each course, updating session state appropriately
+    selected_courses = st.session_state.courses  # Retrieve previously selected courses
+
     for course in courses:
-        if st.checkbox(course, key=course):
-            selected_courses.append(course)
+        is_checked = course in selected_courses  # Check if the course is already selected
+        if st.checkbox(course, value=is_checked, key=course):  # Use the course name as the key
+            if course not in selected_courses:
+                selected_courses.append(course)  # Add to the list if checked
+        else:
+            if course in selected_courses:
+                selected_courses.remove(course)  # Remove from the list if unchecked
+
     # Update session state with selected courses
     st.session_state.courses = selected_courses
-    
-    # Date and learning mode input
-    # st.session_state.start_date = st.date_input("Please select your preferred start date for the course.", value=st.session_state.start_date or date.today(), format='DD/MM/YYYY')
-    # st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Select", "Online", "In-Person", "Hybrid"])
-    st.session_state.learning_mode = st.selectbox("Please select your preferred mode of learning.", ["Online"])
-    
-    if st.button("Next"):
-        # if st.session_state.courses and st.session_state.start_date and st.session_state.learning_mode != "Select":
-        if st.session_state.courses and st.session_state.learning_mode != "Select":
 
+    # Learning mode input
+    # st.session_state.learning_mode = st.selectbox(
+    #     "Please select your preferred mode of learning.", 
+    #     ["Select", "Online", "In-Person", "Hybrid"],
+    #     index=["Select", "Online", "In-Person", "Hybrid"].index(st.session_state.learning_mode)  # Set default based on session state
+    # )
+    st.session_state.learning_mode = st.selectbox(
+        "Please select your preferred mode of learning.", 
+        ["Online"],
+        index=["Online"].index(st.session_state.learning_mode)  # Set default based on session state
+    )
+
+
+    # Navigation buttons
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
+        if st.session_state.courses and st.session_state.learning_mode != "Select":
             st.session_state.step = 11
             st.experimental_rerun()
         else:
-            # st.warning("Please select your courses, preferred start date, and learning mode before proceeding.")
-            st.warning("Please select your courses.")
+            st.warning("Please select your courses and preferred mode of learning before proceeding.")
+
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 7  # Go back to the previous step (Section 6)
+        st.experimental_rerun()
+
 
 elif st.session_state.step == 9:
     st.title("> 8: Identification Documents")
@@ -289,12 +461,22 @@ elif st.session_state.step == 9:
     # if st.session_state.back_id_document is not None:
     #      st.session_state.files(st.session_state.back_id_document)
     
-    if st.button("Next"):
+    # Navigation buttons
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if st.session_state.front_id_document or st.session_state.back_id_document:
             st.session_state.step = 10
             st.experimental_rerun()
         else:
             st.warning("Please upload both the front and back of your identification document before proceeding.")
+
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 8  # Go back to the previous step (Section 7)
+        st.experimental_rerun()
 
 elif st.session_state.step == 10:
     st.title("> 9: Proof of Address")
@@ -303,30 +485,75 @@ elif st.session_state.step == 10:
         if st.session_state.address_proof not in st.session_state.files:
             st.session_state.files.append(st.session_state.address_proof)
 
+    # Navigation buttons
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
 
-    if st.button("Next"):
+    # Handle Next button click
+    if next_clicked:
         if st.session_state.address_proof:
             st.session_state.step = 11
             st.experimental_rerun()
         else:
             st.warning("Please upload your proof of address before proceeding.")
 
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 9  # Go back to the previous step (Section 8)
+        st.experimental_rerun()
+
 elif st.session_state.step == 11:
     st.title("> 10: Additional Information")
-    st.session_state.learning_preferences = st.text_area("Please describe any learning preferences you have.")
-    st.session_state.special_requirements = st.text_area("Please let us know if you have any special requirements.")
-    st.session_state.emergency_contact = st.text_input("Please provide emergency contact details.")
-    st.session_state.consent = st.checkbox("I consent to the collection and processing of my personal data according to Prevista’s privacy policy.")
-    
-    privacy_policy_doc_link = 'https://previstaltd-my.sharepoint.com/:b:/g/personal/muhammadoa_prevista_co_uk/EbObssIa581KhS3Hjhl7gsEBojEcidZgv2YPRj7D5odbeg?e=w4slD6'
-    st.write(f"[Privacy Policy]({privacy_policy_doc_link})")  # Replace '#' with actual link to privacy policy
 
-    if st.button("Next"):
+    # Initialize fields if they do not exist
+    if 'learning_preferences' not in st.session_state:
+        st.session_state.learning_preferences = ""  # Default to empty string
+    if 'special_requirements' not in st.session_state:
+        st.session_state.special_requirements = ""  # Default to empty string
+    if 'emergency_contact' not in st.session_state:
+        st.session_state.emergency_contact = ""  # Default to empty string
+    if 'consent' not in st.session_state:
+        st.session_state.consent = False  # Default to unchecked
+
+    # Input fields with default values from session state
+    st.session_state.learning_preferences = st.text_area(
+        "Please describe any learning preferences you have.", 
+        value=st.session_state.learning_preferences
+    )
+    st.session_state.special_requirements = st.text_area(
+        "Please let us know if you have any special requirements.", 
+        value=st.session_state.special_requirements
+    )
+    st.session_state.emergency_contact = st.text_input(
+        "Please provide emergency contact details.", 
+        value=st.session_state.emergency_contact
+    )
+    st.session_state.consent = st.checkbox(
+        "I consent to the collection and processing of my personal data according to Prevista’s privacy policy.", 
+        value=st.session_state.consent
+    )
+
+    # Link to the privacy policy
+    privacy_policy_doc_link = 'https://previstaltd-my.sharepoint.com/:b:/g/personal/muhammadoa_prevista_co_uk/EbObssIa581KhS3Hjhl7gsEBojEcidZgv2YPRj7D5odbeg?e=w4slD6'
+    st.write(f"[Privacy Policy]({privacy_policy_doc_link})")  # Actual link to privacy policy
+
+    # Navigation buttons
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if all([st.session_state.learning_preferences, st.session_state.special_requirements, st.session_state.emergency_contact, st.session_state.consent]):
             st.session_state.step = 12
             st.experimental_rerun()
         else:
             st.warning("Please complete all fields and consent before proceeding.")
+
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 8  # Go back to the previous step (Section 9)
+        st.experimental_rerun()
+
 
 elif st.session_state.step == 12:
     st.title("> 11: Signature")
@@ -344,13 +571,23 @@ elif st.session_state.step == 12:
     )
     st.session_state.signature = canvas_result.image_data
 
-    if st.button("Next"):
+    # Navigation buttons
+    next_clicked = st.button("Next")
+    back_clicked = st.button("Back")
+
+    # Handle Next button click
+    if next_clicked:
         if is_signature_drawn(st.session_state.signature):
         # if st.session_state.signature is not None:
             st.session_state.step = 13
             st.experimental_rerun()
         else:
             st.warning("Please provide your signature before proceeding.")
+
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 11  # Go back to the previous step (Section 10)
+        st.experimental_rerun()
 
 elif st.session_state.step == 13:
     st.title("Final Review")
@@ -387,9 +624,13 @@ elif st.session_state.step == 13:
     else:
         st.write("No files uploaded.")
     
-    
+    # Submit button
+    submit_clicked = st.button("Submit")
 
-    if st.button("Submit"):
+###############################
+
+    # Handle Submit button click
+    if submit_clicked:        
         # Create a new Document
         doc = Document()
         doc.add_heading('Enrolment Form Submission', 0)
@@ -444,14 +685,17 @@ elif st.session_state.step == 13:
         # Email
         # Sender email credentials
         # Credentials: Streamlit host st.secrets
-        sender_email = st.secrets["sender_email"]
-        sender_password = st.secrets["sender_password"]
+        # sender_email = st.secrets["sender_email"]
+        # sender_password = st.secrets["sender_password"]
+
+        sender_email = get_secret("sender_email")
+        sender_password = get_secret("sender_password")
 
         # Credentials: Local env
         # load_dotenv()                                     # uncomment import of this library!
         # sender_email = os.getenv('EMAIL')
         # sender_password = os.getenv('PASSWORD')
-        team_email = [sender_email, 'muhammadoa@prevista.co.uk']
+        team_email = [sender_email]
         # receiver_email = sender_email
         # receiver_email = 'mohamedr@prevista.co.uk'
 
@@ -525,6 +769,19 @@ elif st.session_state.step == 13:
         st.session_state.submission_done = True
         st.session_state.step = 14  # Move to the final step to show the thank you message
         st.experimental_rerun()
+
+#111111111111111111
+    # Add a warning before the back button
+    st.info("If you go back, you will have to re-sign the form.")
+
+    # Navigation buttons
+    back_clicked = st.button("Back", disabled=st.session_state.submission_done)
+
+    # Handle Back button click
+    if back_clicked:
+        st.session_state.step = 12  # Go back to the previous step
+        st.experimental_rerun()
+#11111111111111111
 
 # Add a new step for the thank you message
 elif st.session_state.step == 14:
