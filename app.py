@@ -380,7 +380,7 @@ elif st.session_state.step == 8:
     if 'courses' not in st.session_state:
         st.session_state.courses = []  # Default to empty list
     if 'learning_mode' not in st.session_state:
-        st.session_state.learning_mode = "Select"  # Default value
+        st.session_state.learning_mode = "Online"  # Default value
 
     # Category selection
     categories = ["Select"] + list(category_courses.keys())
